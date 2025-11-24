@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mr. Conductor - Offline Band Nervous System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <img src="{{ url_for('static', filename='images/0ffd40a4-ca26-4b0e-a439-a0612479d51e.png') }}" 
+                         alt="Mr. Conductor" class="conductor-logo">
+                    <div class="title-section">
+                        <h1>Mr. Conductor</h1>
+                        <p>Offline Band Nervous System</p>
+                    </div>
+                </div>
+                <div class="connection-status">
+                    <div class="status-indicator" id="connectionStatus">
+                        <span class="status-dot"></span>
+                        <span class="status-text">OFFLINE</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Transport Controls -->
+            <section class="control-section transport-section">
+                <h2>Transport Controls</h2>
+                <div class="transport-controls">
+                    <button class="transport-btn start-btn" id="startBtn">
+                        <span class="btn-icon">▶</span>
+                        <span class="btn-text">START</span>
+                    </button>
+                    <button class="transport-btn stop-btn" id="stopBtn">
+                        <span class="btn-icon">⏹</span>
+                        <span class="btn-text">STOP</span>
+                    </button>
+                </div>
+                
+                <!-- BPM Control -->
+                <div class="bpm-control">
+                    <label for="bpmSlider">BPM</label>
+                    <div class="bpm-display" id="bpmDisplay">120</div>
+                    <input type="range" id="bpmSlider" min="60" max="200" value="120" class="bpm-slider">
+                    <div class="bpm-range">
+                        <span>60</span>
+                        <span>200</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Connected Devices -->
+            <section class="control-section devices-section">
+                <h2>Connected Devices</h2>
+                <div class="devices-list" id="devicesList">
+                    <div class="device-item">
+                        <span class="device-status connecting"></span>
+                        <span class="device-name">Loading...</span>
+                    </div>
+                </div>
+                <div class="devices-summary">
+                    <span>Connected Devices: <span id="deviceCount">0</span>/20</span>
+                </div>
+            </section>
+
+            <!-- Scenes -->
+            <section class="control-section scenes-section">
+                <h2>Scenes</h2>
+                <div class="scenes-grid" id="scenesGrid">
+                    <button class="scene-btn" data-scene="Song 1">Song 1</button>
+                    <button class="scene-btn" data-scene="Song 2">Song 2</button>
+                    <button class="scene-btn" data-scene="Song 3">Song 3</button>
+                    <button class="scene-btn" data-scene="Song 4">Song 4</button>
+                </div>
+                <div class="scene-controls">
+                    <button class="control-btn" id="saveSceneBtn">SAVE</button>
+                    <button class="control-btn" id="loadSceneBtn">LOAD</button>
+                </div>
+            </section>
+
+            <!-- MIDI Routing -->
+            <section class="control-section midi-section">
+                <h2>MIDI Routing</h2>
+                <div class="midi-routing" id="midiRouting">
+                    <div class="routing-header">
+                        <span>Input</span>
+                        <span>Output</span>
+                    </div>
+                    <div class="routing-connections" id="routingConnections">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- System Status -->
+            <section class="control-section status-section">
+                <h2>System Status</h2>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <label>CPU Usage:</label>
+                        <span id="cpuUsage">0%</span>
+                    </div>
+                    <div class="status-item">
+                        <label>Memory:</label>
+                        <span id="memoryUsage">0 MB</span>
+                    </div>
+                    <div class="status-item">
+                        <label>Network:</label>
+                        <span id="networkStatus">0 Mbps</span>
+                    </div>
+                    <div class="status-item">
+                        <label>Timing Accuracy:</label>
+                        <span id="timingAccuracy">±0.0ms</span>
+                    </div>
+                    <div class="status-item">
+                        <label>Uptime:</label>
+                        <span id="uptime">0h 0m</span>
+                    </div>
+                    <div class="status-item">
+                        <label>Beat Position:</label>
+                        <span id="beatPosition">0.00</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings -->
+            <section class="control-section settings-section">
+                <h2>Settings</h2>
+                <div class="settings-tabs">
+                    <button class="tab-btn active" data-tab="network">Network</button>
+                    <button class="tab-btn" data-tab="audio">Audio</button>
+                    <button class="tab-btn" data-tab="system">System</button>
+                </div>
+                <div class="settings-content" id="settingsContent">
+                    <div class="tab-panel active" id="networkTab">
+                        <div class="setting-item">
+                            <label>Network Name:</label>
+                            <span>JAM-PI</span>
+                        </div>
+                        <div class="setting-item">
+                            <label>IP Address:</label>
+                            <span>192.168.4.1</span>
+                        </div>
+                        <div class="setting-item">
+                            <label>Connected Clients:</label>
+                            <span id="connectedClients">0</span>
+                        </div>
+                    </div>
+                    <div class="tab-panel" id="audioTab">
+                        <div class="setting-item">
+                            <label>Sample Rate:</label>
+                            <span>48kHz</span>
+                        </div>
+                        <div class="setting-item">
+                            <label>Buffer Size:</label>
+                            <span>256 samples</span>
+                        </div>
+                    </div>
+                    <div class="tab-panel" id="systemTab">
+                        <div class="setting-item">
+                            <label>Version:</label>
+                            <span>Mr. Conductor v1.0</span>
+                        </div>
+                        <div class="setting-item">
+                            <label>Platform:</label>
+                            <span>Raspberry Pi</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                <div class="conductor-mascot">
+                    <img src="{{ url_for('static', filename='images/d42ed271-4975-4d35-8dab-8a9ff3374006.png') }}" 
+                         alt="Mr. Conductor Mascot" class="mascot-image">
+                </div>
+                <div class="footer-info">
+                    <p>Mr. Conductor - Making bands sync in perfect harmony</p>
+                    <p>Offline Band Nervous System © 2025</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal" id="sceneModal">
+            <div class="modal-header">
+                <h3>Create New Scene</h3>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="sceneName">Scene Name:</label>
+                    <input type="text" id="sceneName" placeholder="Enter scene name">
+                </div>
+                <div class="form-group">
+                    <label for="sceneBpm">BPM:</label>
+                    <input type="number" id="sceneBpm" min="60" max="200" value="120">
+                </div>
+                <div class="form-group">
+                    <label for="sceneNotes">Notes:</label>
+                    <textarea id="sceneNotes" placeholder="Optional notes about this scene"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelBtn">Cancel</button>
+                <button class="btn-primary" id="createSceneBtn">Create Scene</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
+
