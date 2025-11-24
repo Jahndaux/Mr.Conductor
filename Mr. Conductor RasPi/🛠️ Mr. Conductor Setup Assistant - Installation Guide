@@ -1,0 +1,281 @@
+# 🛠️ Mr. Conductor Setup Assistant - Installation Guide
+
+This guide will help you install and configure the Mr. Conductor Setup Assistant on your Raspberry Pi.
+
+## 📋 Prerequisites
+
+### **Hardware Requirements**
+- Raspberry Pi 3B+ or Pi 4 (recommended)
+- MicroSD card (16GB minimum)
+- WiFi capability (built-in or USB adapter)
+
+### **Software Requirements**
+- Raspberry Pi OS (32-bit or 64-bit)
+- Python 3.6 or higher (usually pre-installed)
+- Internet connection for initial setup
+
+## 🚀 Installation Methods
+
+### **Method 1: Quick Install (Recommended)**
+
+If you already have Mr. Conductor installed:
+
+```bash
+# Download and extract the setup assistant
+cd /home/pi
+wget [DOWNLOAD_URL]/mr-conductor-setup-assistant.tar.gz
+tar -xzf mr-conductor-setup-assistant.tar.gz
+cd mr-conductor-setup-assistant
+
+# Install Python dependencies
+pip3 install flask flask-cors
+
+# Make startup script executable
+chmod +x start_assistant.sh
+
+# Start the setup assistant
+./start_assistant.sh
+```
+
+### **Method 2: Manual Installation**
+
+```bash
+# Create directory structure
+mkdir -p mr-conductor-setup-assistant/{web,templates,static/{css,js}}
+
+# Copy files (assuming you have the source files)
+cp setup_assistant.py mr-conductor-setup-assistant/web/
+cp setup_assistant.html mr-conductor-setup-assistant/templates/
+cp setup_assistant.css mr-conductor-setup-assistant/static/css/
+cp setup_assistant.js mr-conductor-setup-assistant/static/js/
+cp start_assistant.sh mr-conductor-setup-assistant/
+
+# Install dependencies
+pip3 install flask flask-cors
+
+# Make executable
+chmod +x mr-conductor-setup-assistant/start_assistant.sh
+```
+
+## 🔧 Configuration
+
+### **1. Network Configuration**
+
+The setup assistant runs on port 8080 by default. If you need to change this:
+
+```bash
+# Edit the Flask app
+nano mr-conductor-setup-assistant/web/setup_assistant.py
+
+# Change this line:
+app.run(host='0.0.0.0', port=8080, debug=False)
+# To your preferred port:
+app.run(host='0.0.0.0', port=YOUR_PORT, debug=False)
+```
+
+### **2. Permissions Setup**
+
+For the auto-fix functions to work, the setup assistant needs sudo privileges:
+
+```bash
+# Option A: Run with sudo (simple but less secure)
+sudo python3 web/setup_assistant.py
+
+# Option B: Add specific sudo permissions (recommended)
+sudo visudo
+
+# Add these lines to allow specific commands without password:
+pi ALL=(ALL) NOPASSWD: /bin/systemctl restart hostapd
+pi ALL=(ALL) NOPASSWD: /bin/systemctl restart dnsmasq
+pi ALL=(ALL) NOPASSWD: /bin/systemctl restart mr-conductor
+pi ALL=(ALL) NOPASSWD: /bin/systemctl stop hostapd
+pi ALL=(ALL) NOPASSWD: /bin/systemctl start hostapd
+pi ALL=(ALL) NOPASSWD: /sbin/iw dev wlan0 set type __ap
+pi ALL=(ALL) NOPASSWD: /sbin/ip addr *
+pi ALL=(ALL) NOPASSWD: /sbin/rfkill unblock wifi
+```
+
+### **3. Auto-Start Configuration**
+
+To start the setup assistant automatically on boot:
+
+```bash
+# Create systemd service
+sudo nano /etc/systemd/system/mr-conductor-assistant.service
+
+# Add this content:
+[Unit]
+Description=Mr. Conductor Setup Assistant
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/mr-conductor-setup-assistant/web
+ExecStart=/usr/bin/python3 setup_assistant.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+
+# Enable and start the service
+sudo systemctl enable mr-conductor-assistant.service
+sudo systemctl start mr-conductor-assistant.service
+```
+
+## 🧪 Testing the Installation
+
+### **1. Basic Functionality Test**
+
+```bash
+# Start the setup assistant
+cd mr-conductor-setup-assistant
+./start_assistant.sh
+
+# In another terminal, test the web interface
+curl -I http://localhost:8080
+
+# You should see HTTP/1.1 200 OK
+```
+
+### **2. Web Interface Test**
+
+1. Open a web browser
+2. Navigate to `http://localhost:8080`
+3. You should see the Mr. Conductor Setup Assistant interface
+4. Click "🔄 Refresh Status" to test API connectivity
+5. Try clicking a "🔧 Fix" button to test auto-fix functionality
+
+### **3. Network Access Test**
+
+If you're on the JAM-PI network:
+1. Connect another device to JAM-PI WiFi
+2. Open browser to `http://192.168.4.1:8080`
+3. Verify the interface loads correctly
+
+## 🚨 Troubleshooting
+
+### **Port Already in Use**
+```bash
+# Check what's using port 8080
+sudo netstat -tlnp | grep 8080
+
+# Kill the process
+sudo fuser -k 8080/tcp
+
+# Try starting again
+./start_assistant.sh
+```
+
+### **Permission Denied Errors**
+```bash
+# Make sure the startup script is executable
+chmod +x start_assistant.sh
+
+# Check Python file permissions
+chmod +x web/setup_assistant.py
+
+# If auto-fixes don't work, run with sudo
+sudo python3 web/setup_assistant.py
+```
+
+### **Flask Import Errors**
+```bash
+# Install Flask and dependencies
+pip3 install flask flask-cors
+
+# If using system Python, try:
+sudo apt update
+sudo apt install python3-flask python3-flask-cors
+```
+
+### **Can't Access from Other Devices**
+```bash
+# Check if the service is binding to all interfaces
+netstat -tlnp | grep 8080
+# Should show 0.0.0.0:8080, not 127.0.0.1:8080
+
+# Check firewall settings
+sudo ufw status
+
+# If firewall is active, allow port 8080
+sudo ufw allow 8080
+```
+
+### **Auto-Fix Functions Don't Work**
+```bash
+# Test sudo permissions
+sudo systemctl status hostapd
+
+# If that works, the issue is permissions in the Flask app
+# Run the setup assistant with sudo:
+sudo python3 web/setup_assistant.py
+```
+
+## 🔄 Updating
+
+To update the setup assistant:
+
+```bash
+# Stop the current instance
+sudo systemctl stop mr-conductor-assistant.service
+
+# Backup current installation
+cp -r mr-conductor-setup-assistant mr-conductor-setup-assistant.backup
+
+# Download and extract new version
+wget [DOWNLOAD_URL]/mr-conductor-setup-assistant-new.tar.gz
+tar -xzf mr-conductor-setup-assistant-new.tar.gz
+
+# Copy over any custom configurations
+# Then restart
+sudo systemctl start mr-conductor-assistant.service
+```
+
+## 🗑️ Uninstalling
+
+To completely remove the setup assistant:
+
+```bash
+# Stop and disable the service
+sudo systemctl stop mr-conductor-assistant.service
+sudo systemctl disable mr-conductor-assistant.service
+sudo rm /etc/systemd/system/mr-conductor-assistant.service
+
+# Remove files
+rm -rf mr-conductor-setup-assistant
+
+# Remove Python packages (optional)
+pip3 uninstall flask flask-cors
+```
+
+## 📞 Support
+
+If you encounter issues:
+
+1. **Check the logs:**
+   ```bash
+   sudo journalctl -u mr-conductor-assistant.service -f
+   ```
+
+2. **Test with the simple version:**
+   ```bash
+   python3 test_simple.py
+   ```
+
+3. **Verify Mr. Conductor is installed:**
+   ```bash
+   systemctl status mr-conductor
+   ```
+
+4. **Check network connectivity:**
+   ```bash
+   ping 192.168.4.1
+   iwconfig
+   ```
+
+---
+
+**🎵 Once installed, you'll have a beautiful point-and-click interface to manage your Mr. Conductor system! 🎵**
+

@@ -1,0 +1,218 @@
+# 🎵 Mr. Conductor Setup Assistant
+
+A beautiful, web-based point-and-click interface for diagnosing and fixing Mr. Conductor setup issues. No more command line fatigue!
+
+![Mr. Conductor Setup Assistant](https://img.shields.io/badge/Mr.%20Conductor-Setup%20Assistant-orange?style=for-the-badge&logo=music)
+
+## ✨ Features
+
+### 🔍 **Visual System Diagnostics**
+- Real-time status monitoring for all services
+- Color-coded status indicators (green/red/yellow)
+- Automatic refresh every 10 seconds
+- Clear problem identification
+
+### 🔧 **One-Click Fixes**
+- **Fix WiFi Interface** - Sets wlan0 to AP mode
+- **Fix DHCP Server** - Repairs dnsmasq configuration
+- **Fix IP Address** - Sets correct static IP (192.168.4.1)
+- **Restart Services** - Restarts all Mr. Conductor services
+- **Emergency Reset** - Nuclear option that fixes everything
+
+### 📋 **Copy-Paste Commands**
+- Pre-built command blocks for manual execution
+- One-click copy to clipboard
+- No typing required - just paste and run
+- Multiple command sets (check status, fix WiFi, emergency reset)
+
+### 📜 **Service Logs**
+- Real-time log viewing for hostapd, dnsmasq, mr-conductor
+- Easy troubleshooting and debugging
+- No need to remember journalctl commands
+
+### 🎨 **Beautiful Interface**
+- Mr. Conductor themed design (orange/blue/teal colors)
+- Responsive design works on phone, tablet, laptop
+- Smooth animations and visual feedback
+- Progress modals and success notifications
+
+## 🚀 Quick Start
+
+### **Option 1: Simple Startup**
+```bash
+cd mr-conductor-setup-assistant
+./start_assistant.sh
+```
+
+### **Option 2: Manual Startup**
+```bash
+cd mr-conductor-setup-assistant/web
+python3 setup_assistant.py
+```
+
+### **Access the Interface**
+Open your browser to:
+- **http://192.168.4.1:8080** (if on JAM-PI network)
+- **http://localhost:8080** (if running locally)
+
+## 📱 How to Use
+
+### **1. Check System Status**
+- The dashboard shows 6 key system components
+- Green indicators = working correctly ✅
+- Red indicators = needs attention ❌
+- Click "🔄 Refresh Status" to update
+
+### **2. Apply Quick Fixes**
+- Click any "🔧 Fix" button to resolve issues
+- Use "🚨 Emergency Reset" if nothing else works
+- Progress bars show fix status
+- Success/error notifications confirm results
+
+### **3. Copy-Paste Commands**
+- Switch between command tabs (Check Status, Fix WiFi, Emergency Reset)
+- Click "📋 Copy All" to copy commands to clipboard
+- Paste into terminal and run manually
+
+### **4. View Service Logs**
+- Click service tabs (hostapd, dnsmasq, mr-conductor)
+- View recent log entries for troubleshooting
+- Logs update automatically
+
+## 🛠️ Installation
+
+### **Prerequisites**
+- Python 3.6+
+- Flask and Flask-CORS
+- Raspberry Pi with Mr. Conductor installed
+
+### **Install Dependencies**
+```bash
+pip3 install flask flask-cors
+```
+
+### **Download and Extract**
+```bash
+# Extract the setup assistant
+tar -xzf mr-conductor-setup-assistant.tar.gz
+cd mr-conductor-setup-assistant
+
+# Make startup script executable
+chmod +x start_assistant.sh
+```
+
+## 🔧 Technical Details
+
+### **System Requirements**
+- **OS:** Raspberry Pi OS (Debian-based Linux)
+- **Python:** 3.6 or higher
+- **Memory:** 512MB RAM minimum
+- **Storage:** 50MB for setup assistant files
+
+### **Network Configuration**
+- **Default Port:** 8080
+- **Binding:** 0.0.0.0 (all interfaces)
+- **Access:** Works on JAM-PI network or local network
+
+### **Diagnostic Functions**
+- **Service Status:** Uses `systemctl is-active`
+- **WiFi Interface:** Checks `iw dev wlan0 info` for AP mode
+- **IP Address:** Verifies 192.168.4.1/24 on wlan0
+- **Network Broadcasting:** Scans for JAM-PI SSID
+
+### **Auto-Fix Functions**
+- **WiFi Interface Fix:** `iw dev wlan0 set type __ap`
+- **IP Address Fix:** `ip addr add 192.168.4.1/24 dev wlan0`
+- **DHCP Fix:** Creates clean dnsmasq.conf with proper settings
+- **Service Restart:** `systemctl restart hostapd dnsmasq mr-conductor`
+
+## 🚨 Troubleshooting
+
+### **Setup Assistant Won't Start**
+```bash
+# Check if port 8080 is in use
+netstat -tlnp | grep 8080
+
+# Kill any processes using port 8080
+sudo fuser -k 8080/tcp
+
+# Try starting again
+./start_assistant.sh
+```
+
+### **Can't Access Web Interface**
+- Make sure you're connected to the JAM-PI network
+- Try http://localhost:8080 if running locally
+- Check firewall settings: `sudo ufw status`
+
+### **Fix Buttons Don't Work**
+- The setup assistant needs sudo privileges for system changes
+- Run with: `sudo python3 web/setup_assistant.py`
+- Or add user to sudoers for specific commands
+
+### **Services Still Failing After Fixes**
+- Use the "🚨 Emergency Reset" button
+- Check service logs in the interface
+- Manually run commands from copy-paste section
+
+## 📁 File Structure
+
+```
+mr-conductor-setup-assistant/
+├── web/
+│   └── setup_assistant.py          # Main Flask application
+├── templates/
+│   └── setup_assistant.html        # Web interface template
+├── static/
+│   ├── css/
+│   │   └── setup_assistant.css     # Styling and animations
+│   └── js/
+│       └── setup_assistant.js      # Interactive functionality
+├── start_assistant.sh              # Startup script
+├── test_simple.py                  # Simple test version
+└── README.md                       # This file
+```
+
+## 🎯 Use Cases
+
+### **For Band Leaders**
+- Quick visual check of system health before rehearsal
+- One-click fixes for common issues
+- No technical knowledge required
+
+### **For Sound Engineers**
+- Detailed service logs for troubleshooting
+- Copy-paste commands for advanced fixes
+- Real-time monitoring during setup
+
+### **For Musicians**
+- Simple interface to check if JAM-PI is working
+- Easy access to Mr. Conductor web interface
+- Visual confirmation that sync is available
+
+## 🔮 Future Enhancements
+
+- **Auto-fix scheduling** - Automatically apply fixes when issues detected
+- **Performance monitoring** - Track system performance over time
+- **Remote access** - Access setup assistant from any device on network
+- **Backup/restore** - Save and restore working configurations
+- **Update notifications** - Alert when Mr. Conductor updates available
+
+## 🤝 Contributing
+
+This setup assistant was created to eliminate command line complexity and provide a user-friendly interface for Mr. Conductor management. 
+
+**Feedback welcome on:**
+- User interface improvements
+- Additional diagnostic checks
+- New auto-fix functions
+- Mobile device compatibility
+
+## 📄 License
+
+Part of the Mr. Conductor project - Offline Band Nervous System.
+
+---
+
+**🎵 Happy conducting! May your band always be in perfect sync! 🎵**
+
